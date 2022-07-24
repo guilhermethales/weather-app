@@ -1,17 +1,20 @@
 import axios from './config'
 
-type GetOneCallWeatherForecast = {
+export type GetOneCallWeatherForecast = {
   lat?: number
   lon?: number
-  exclude: string
-  units: 'standard' | 'metric' | 'imperial'
 }
 
 export const getOneCallWeatherForecast = async (
   params: GetOneCallWeatherForecast
 ) => {
-  console.log(params, 'params')
-  const response = await axios.get('/data/2.5/onecall', { params })
+  const response = await axios.get('/data/2.5/onecall', {
+    params: {
+      ...params,
+      exclude: 'minutely,hourly,alerts',
+      units: 'metric'
+    }
+  })
 
   return response.data
 }

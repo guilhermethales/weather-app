@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Head from 'next/head'
 import Image from 'next/image'
 import { useQuery } from '@tanstack/react-query'
@@ -15,41 +15,79 @@ import {
 
 import { formatDate } from '../utils/functions/dates'
 import { WEATHER_ICONS } from '../utils/constants/weather'
-import { useCityGeocoding } from '../hooks/city'
 import { getOneCallWeatherForecast } from '../api/weather'
 import { OneCallCity } from '../types/daily'
+import { getCityGeocoding } from '../api/city'
+import { CityGeocoding } from '../types/city'
 
-const Home = () => {
+export async function getServerSideProps() {
+  const city = await getCityGeocoding({
+    q: 'Paris',
+    limit: 1
+  })
+
+  const weather = await getOneCallWeatherForecast({
+    lat: city[0].lat,
+    lon: city[0].lon
+  })
+
+  return { props: { city: city, weather } }
+}
+
+type HomeProps = {
+  city: CityGeocoding[]
+  weather: OneCallCity
+}
+
+const DEFAULT_CITY = 'Paris'
+
+const Home = ({ city, weather }: HomeProps) => {
   const [cityInput, setCityInput] = useState('')
-  const [searchCity, setSearchCity] = useState('Paris')
-  const { data: cityData } = useCityGeocoding(searchCity)
+  const [searchCity, setSearchCity] = useState(DEFAULT_CITY)
 
-  const { isLoading, isError, data } = useQuery<OneCallCity>(
-    ['weather'],
+  const { data: cityData, refetch } = useQuery<CityGeocoding[]>(
+    ['city'],
     () =>
-      getOneCallWeatherForecast({
-        lat: cityData?.lat,
-        lon: cityData?.lon,
-        exclude: 'minutely,hourly,alerts',
-        units: 'metric'
+      getCityGeocoding({
+        q: searchCity,
+        limit: 1
       }),
     {
-      enabled: !!cityData?.name,
+      initialData: city,
+      enabled: false
+    }
+  )
+
+  const isFirstCity = cityData[0].name === DEFAULT_CITY
+
+  const { data } = useQuery<OneCallCity>(
+    ['weather', cityData[0].name],
+    () =>
+      getOneCallWeatherForecast({
+        lat: cityData[0].lat,
+        lon: cityData[0].lon
+      }),
+    {
+      initialData: isFirstCity ? weather : undefined,
+      keepPreviousData: true,
+      enabled: !isFirstCity,
       select: (data) => ({ ...data, daily: data.daily.slice(0, 5) })
     }
   )
 
-  if (isLoading) return 'Loading...'
-
-  if (isError) return 'Error'
-
-  const currentDay = data?.current
+  useEffect(() => {
+    if (cityData && cityData[0].name !== searchCity) {
+      refetch()
+    }
+  }, [cityData, searchCity, refetch])
 
   const submitSearchCity = () => {
     setSearchCity(cityInput)
   }
 
-  return data.daily ? (
+  const currentDay = data?.current
+
+  return currentDay ? (
     <>
       <Head>
         <title>Weather Forecast</title>
@@ -107,7 +145,7 @@ const Home = () => {
                   </Heading>
                   <Box pl={4}>
                     <Heading as="h1" color="white" size="lg">
-                      {cityData?.name}
+                      {`${cityData[0].name}, ${cityData[0].country}`}
                     </Heading>
                     <Text color="white">{formatDate(currentDay.dt)}</Text>
                   </Box>
