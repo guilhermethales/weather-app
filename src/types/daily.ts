@@ -10,6 +10,9 @@ export type CurrentWeather = {
   temp: number
   uvi: number
   visibility: number
+  weather: Weather[]
+  wind_deg: number
+  wind_speed: number
 }
 
 export type WeatherIcon =

@@ -46,6 +46,12 @@ type HomeProps = {
   error?: boolean
 }
 
+const renderErrorMessage = () => (
+  <Heading color="white">
+    Error while fetching weather forecast data. Try again later.
+  </Heading>
+)
+
 const Home = ({ city, weather, error }: HomeProps) => {
   const [cityInput, setCityInput] = useState('')
   const [searchCity, setSearchCity] = useState(DEFAULT_CITY)
@@ -101,9 +107,7 @@ const Home = ({ city, weather, error }: HomeProps) => {
     return (
       <Container>
         <Box pt={100} textAlign="center">
-          <Heading color="white">
-            Error while fetching weather forecast data. Try again later.
-          </Heading>
+          {renderErrorMessage()}
         </Box>
       </Container>
     )
@@ -153,9 +157,7 @@ const Home = ({ city, weather, error }: HomeProps) => {
           </Box>
 
           {cityData.length === 0 ? (
-            <Heading color="white">
-              Error while fetching weather forecast data. Try again later.
-            </Heading>
+            renderErrorMessage()
           ) : (
             <WeatherData weather={weather} cityData={cityData} />
           )}
