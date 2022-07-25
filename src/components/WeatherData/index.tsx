@@ -59,9 +59,9 @@ const WeatherData = ({ weather, cityData }: WeatherDataProps) => {
           </Box>
 
           <Box display="flex" fontWeight="medium" color="white" gap={2}>
-            <Text>Min: {data.daily[0].temp.min} °C</Text>
-            <Text>Max: {data.daily[0].temp.max} °C</Text>
-            <Text>Mean: {data.daily[0].temp.day} °C</Text>
+            <Text>Min: {Math.round(data.daily[0].temp.min)} °C</Text>
+            <Text>Max: {Math.round(data.daily[0].temp.max)} °C</Text>
+            <Text>Mean: {Math.round(data.daily[0].temp.day)} °C</Text>
           </Box>
         </Box>
       </Box>
