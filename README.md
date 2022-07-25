@@ -1,34 +1,37 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## Weather App
 
-## Getting Started
+> A simple weather app to show 5 day forecast for given city
 
-First, run the development server:
+## Getting start
 
-```bash
-npm run dev
-# or
-yarn dev
+The application is deployed and can be accessed [here](https://weather-forecast-next-app.netlify.app/).
+
+To run the application in development mode, it's necessary to have a `.env.local` file with some keys:
+
+```sh
+NEXT_PUBLIC_API_KEY=
+NEXT_PUBLIC_API_URL=https://api.openweathermap.org
+NEXT_PUBLIC_BACKGROUND=https://images.unsplash.com/photo-1542065029-be403c4fb94b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Install dependencies 
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+```sh
+npm install
+```
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+Run application
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+```sh
+npm run dev
+```
 
-## Learn More
+Open up [http://localhost:3000](http://localhost:3000) and you should be ready to go!
 
-To learn more about Next.js, take a look at the following resources:
+## Technologies
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- Typescript
+- NextJS
+- Chakra UI
+- React Query
+- Testing Library
