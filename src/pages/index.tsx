@@ -20,6 +20,7 @@ import { CityGeocoding } from '../types/city'
 import WeatherData from '../components/WeatherData'
 import Container from '../components/Container'
 import { DEFAULT_CITY } from '../utils/constants/city'
+import { isSearchCityEqualToCurrentCity } from '../utils/functions/city'
 
 export async function getServerSideProps() {
   try {
@@ -70,7 +71,10 @@ const Home = ({ city, weather, error }: HomeProps) => {
       initialData: city,
       enabled: false,
       onSuccess: (data) => {
-        if (data.length > 0 && data[0].name !== searchCity) {
+        if (
+          data.length > 0 &&
+          !isSearchCityEqualToCurrentCity(data[0].name, searchCity)
+        ) {
           setSearchCity(lastSearchedCity)
           toast.error('City not found!')
         }
@@ -88,7 +92,12 @@ const Home = ({ city, weather, error }: HomeProps) => {
   )
 
   useEffect(() => {
-    if (cityData && cityData[0]?.name !== searchCity) {
+    const shouldSearchCity =
+      searchCity &&
+      cityData &&
+      !isSearchCityEqualToCurrentCity(cityData[0]?.name, searchCity)
+
+    if (shouldSearchCity) {
       refetch()
     }
   }, [cityData, searchCity, refetch])
