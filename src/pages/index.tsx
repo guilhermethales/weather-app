@@ -22,10 +22,16 @@ import Container from '../components/Container'
 import { DEFAULT_CITY } from '../utils/constants/city'
 import { isSearchCityEqualToCurrentCity } from '../utils/functions/city'
 
-export async function getServerSideProps() {
+type QueryProps = {
+  query: {
+    city: string
+  }
+}
+
+export async function getServerSideProps({ query }: QueryProps) {
   try {
     const city = await getCityGeocoding({
-      q: DEFAULT_CITY
+      q: query.city
     })
 
     const weather = await getOneCallWeatherForecast({
@@ -54,9 +60,10 @@ const renderErrorMessage = () => (
 )
 
 const Home = ({ city, weather, error }: HomeProps) => {
+  const cityName = city[0]?.name || DEFAULT_CITY
   const [cityInput, setCityInput] = useState('')
-  const [searchCity, setSearchCity] = useState(DEFAULT_CITY)
-  const [lastSearchedCity, setLastSearchedCity] = useState(DEFAULT_CITY)
+  const [searchCity, setSearchCity] = useState(cityName)
+  const [lastSearchedCity, setLastSearchedCity] = useState(cityName)
   const queryClient = useQueryClient()
 
   const {
