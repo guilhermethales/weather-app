@@ -1,16 +1,14 @@
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
-import {
-  Hydrate,
-  QueryClient,
-  QueryClientProvider
-} from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ChakraProvider } from '@chakra-ui/react'
+import { Toaster } from 'react-hot-toast'
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false
+      refetchOnWindowFocus: false,
+      retry: false
     }
   }
 })
@@ -18,11 +16,11 @@ const queryClient = new QueryClient({
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <Hydrate state={pageProps.dehydratedState}>
-        <ChakraProvider>
-          <Component {...pageProps} />
-        </ChakraProvider>
-      </Hydrate>
+      <ChakraProvider>
+        <Component {...pageProps} />
+      </ChakraProvider>
+
+      <Toaster toastOptions={{ duration: 2000 }} position="top-right" />
     </QueryClientProvider>
   )
 }

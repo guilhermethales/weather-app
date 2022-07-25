@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
+import { AxiosError } from 'axios'
 import Head from 'next/head'
-import Image from 'next/image'
-import { useQuery } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Box,
   Button,
@@ -9,85 +10,106 @@ import {
   Heading,
   Input,
   InputGroup,
-  InputRightElement,
-  Text
+  InputRightElement
 } from '@chakra-ui/react'
 
-import { formatDate } from '../utils/functions/dates'
-import { WEATHER_ICONS } from '../utils/constants/weather'
 import { getOneCallWeatherForecast } from '../api/weather'
-import { OneCallCity } from '../types/daily'
 import { getCityGeocoding } from '../api/city'
+import { OneCallCity } from '../types/daily'
 import { CityGeocoding } from '../types/city'
+import WeatherData from '../components/WeatherData'
+import Container from '../components/Container'
+import { DEFAULT_CITY } from '../utils/constants/city'
 
 export async function getServerSideProps() {
-  const city = await getCityGeocoding({
-    q: 'Paris',
-    limit: 1
-  })
+  try {
+    const city = await getCityGeocoding({
+      q: DEFAULT_CITY
+    })
 
-  const weather = await getOneCallWeatherForecast({
-    lat: city[0].lat,
-    lon: city[0].lon
-  })
+    const weather = await getOneCallWeatherForecast({
+      lat: city[0].lat,
+      lon: city[0].lon
+    })
 
-  return { props: { city: city, weather } }
+    return { props: { city: city, weather } }
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      return { props: { error: !!error, city: [], weather: {} } }
+    }
+  }
 }
 
 type HomeProps = {
   city: CityGeocoding[]
   weather: OneCallCity
+  error?: boolean
 }
 
-const DEFAULT_CITY = 'Paris'
-
-const Home = ({ city, weather }: HomeProps) => {
+const Home = ({ city, weather, error }: HomeProps) => {
   const [cityInput, setCityInput] = useState('')
   const [searchCity, setSearchCity] = useState(DEFAULT_CITY)
+  const [lastSearchedCity, setLastSearchedCity] = useState(DEFAULT_CITY)
+  const queryClient = useQueryClient()
 
-  const { data: cityData, refetch } = useQuery<CityGeocoding[]>(
-    ['city'],
-    () =>
-      getCityGeocoding({
-        q: searchCity,
-        limit: 1
-      }),
+  const {
+    data: cityData,
+    status,
+    refetch,
+    isError
+  } = useQuery<CityGeocoding[]>(
+    ['city', searchCity],
+    () => getCityGeocoding({ q: searchCity }),
     {
       initialData: city,
-      enabled: false
-    }
-  )
+      enabled: false,
+      onSuccess: (data) => {
+        if (data.length > 0 && data[0].name !== searchCity) {
+          setSearchCity(lastSearchedCity)
+          toast.error('City not found!')
+        }
+      },
+      select: (data) => {
+        const lastCachedCity = queryClient.getQueryData([
+          'city',
+          lastSearchedCity
+        ]) as CityGeocoding[]
 
-  const isFirstCity = cityData[0].name === DEFAULT_CITY
-
-  const { data } = useQuery<OneCallCity>(
-    ['weather', cityData[0].name],
-    () =>
-      getOneCallWeatherForecast({
-        lat: cityData[0].lat,
-        lon: cityData[0].lon
-      }),
-    {
-      initialData: isFirstCity ? weather : undefined,
-      keepPreviousData: true,
-      enabled: !isFirstCity,
-      select: (data) => ({ ...data, daily: data.daily.slice(0, 5) })
+        return data.length > 0 ? data : lastCachedCity
+      },
+      keepPreviousData: true
     }
   )
 
   useEffect(() => {
-    if (cityData && cityData[0].name !== searchCity) {
+    if (cityData && cityData[0]?.name !== searchCity) {
       refetch()
     }
   }, [cityData, searchCity, refetch])
+
+  useEffect(() => {
+    if (status === 'success' && cityData.length > 0) {
+      setLastSearchedCity(cityData[0].name)
+    }
+  }, [status, searchCity, cityData])
 
   const submitSearchCity = () => {
     setSearchCity(cityInput)
   }
 
-  const currentDay = data?.current
+  if (error || isError) {
+    return (
+      <Container>
+        <Box pt={100} textAlign="center">
+          <Heading color="white">
+            Error while fetching weather forecast data. Try again later.
+          </Heading>
+        </Box>
+      </Container>
+    )
+  }
 
-  return currentDay ? (
+  return (
     <>
       <Head>
         <title>Weather Forecast</title>
@@ -95,16 +117,10 @@ const Home = ({ city, weather }: HomeProps) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <Box
-        as="main"
-        backgroundImage={`url(${process.env.NEXT_PUBLIC_BACKGROUND})`}
-        backgroundPosition="center"
-        backgroundSize="cover"
-        height="100%"
-        overflow="auto"
-      >
+      <Container>
         <Box
-          p={8}
+          px={8}
+          py={16}
           display="flex"
           flexDirection="column"
           justifyContent="center"
@@ -136,68 +152,17 @@ const Home = ({ city, weather }: HomeProps) => {
             </FormControl>
           </Box>
 
-          <Box my={20}>
-            <Box>
-              <Box mb={4}>
-                <Box display="flex" alignItems="center">
-                  <Heading as="h2" color="white" size="4xl">
-                    {Math.round(currentDay?.temp)}°
-                  </Heading>
-                  <Box pl={4}>
-                    <Heading as="h1" color="white" size="lg">
-                      {`${cityData[0].name}, ${cityData[0].country}`}
-                    </Heading>
-                    <Text color="white">{formatDate(currentDay.dt)}</Text>
-                  </Box>
-                </Box>
-              </Box>
-
-              <Box display="flex" fontWeight="medium" color="white" gap={2}>
-                <Text>Min: {data.daily[0].temp.min} °C</Text>
-                <Text>Max: {data.daily[0].temp.max} °C</Text>
-                <Text>Mean: {data.daily[0].temp.day} °C</Text>
-              </Box>
-            </Box>
-          </Box>
-
-          <Box
-            as="section"
-            display={{ lg: 'grid' }}
-            gap={4}
-            gridTemplateColumns="repeat(4, 200px)"
-          >
-            {[...data.daily.slice(1, data.daily.length)].map((day) => (
-              <Box
-                key={day.dt}
-                mb={4}
-                padding={4}
-                shadow="md"
-                bgColor="#363636"
-                color="white"
-                position="relative"
-                borderRadius={8}
-              >
-                <Box mb={4}>
-                  <Heading as="h3" size="sm">
-                    {formatDate(day.dt)}
-                  </Heading>
-                </Box>
-
-                <Box my={2} mx="auto" maxW={25}>
-                  <Image src={WEATHER_ICONS[day.weather[0].icon]} alt="sun" />
-                </Box>
-
-                <Text>Morning {Math.round(day.temp.morn)}°C</Text>
-                <Text>Day {Math.round(day.temp.day)}°C</Text>
-                <Text>Night {Math.round(day.temp.night)}°C</Text>
-                <Text>Humidity {day.humidity}%</Text>
-              </Box>
-            ))}
-          </Box>
+          {cityData.length === 0 ? (
+            <Heading color="white">
+              Error while fetching weather forecast data. Try again later.
+            </Heading>
+          ) : (
+            <WeatherData weather={weather} cityData={cityData} />
+          )}
         </Box>
-      </Box>
+      </Container>
     </>
-  ) : null
+  )
 }
 
 export default Home
