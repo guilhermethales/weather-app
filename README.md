@@ -26,6 +26,18 @@ Run application
 npm run dev
 ```
 
+Run tests
+
+```sh
+npm run test
+```
+
+Watching tests
+
+```sh
+npm run test:watch
+```
+
 Open up [http://localhost:3000](http://localhost:3000) and you should be ready to go!
 
 ## Technologies
