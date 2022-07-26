@@ -39,7 +39,7 @@ export async function getServerSideProps({ query }: QueryProps) {
       lon: city[0].lon
     })
 
-    return { props: { city: city, weather } }
+    return { props: { city: city, weather, cityFirstLocation: query.city } }
   } catch (error) {
     if (error instanceof AxiosError) {
       return { props: { error: !!error, city: [], weather: {} } }
@@ -51,6 +51,7 @@ type HomeProps = {
   city: CityGeocoding[]
   weather: OneCallCity
   error?: boolean
+  cityFirstLocation: string
 }
 
 const renderErrorMessage = () => (
@@ -59,7 +60,7 @@ const renderErrorMessage = () => (
   </Heading>
 )
 
-const Home = ({ city, weather, error }: HomeProps) => {
+const Home = ({ city, weather, error, cityFirstLocation }: HomeProps) => {
   const cityName = city[0]?.name || DEFAULT_CITY
   const [cityInput, setCityInput] = useState('')
   const [searchCity, setSearchCity] = useState(cityName)
@@ -175,7 +176,11 @@ const Home = ({ city, weather, error }: HomeProps) => {
           {cityData.length === 0 ? (
             renderErrorMessage()
           ) : (
-            <WeatherData weather={weather} cityData={cityData} />
+            <WeatherData
+              cityFirstLocation={cityFirstLocation}
+              weather={weather}
+              cityData={cityData}
+            />
           )}
         </Box>
       </Container>

@@ -7,15 +7,19 @@ import { WEATHER_ICONS } from '../../utils/constants/weather'
 import { OneCallCity } from '../../types/daily'
 import { CityGeocoding } from '../../types/city'
 import { getOneCallWeatherForecast } from '../../api/weather'
-import { DEFAULT_CITY } from '../../utils/constants/city'
 
 type WeatherDataProps = {
   weather: OneCallCity
   cityData: CityGeocoding[]
+  cityFirstLocation: string
 }
 
-const WeatherData = ({ weather, cityData }: WeatherDataProps) => {
-  const isFirstCity = cityData[0].name === DEFAULT_CITY
+const WeatherData = ({
+  weather,
+  cityData,
+  cityFirstLocation
+}: WeatherDataProps) => {
+  const isFirstCity = cityData[0].name === cityFirstLocation
 
   const { data, isError } = useQuery<OneCallCity>(
     ['weather', cityData[0].name],
