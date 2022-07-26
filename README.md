@@ -4,7 +4,7 @@
 
 ## Getting start
 
-The application is deployed and can be accessed [here](https://weather-forecast-next-app.netlify.app/).
+The application is deployed and can be accessed [here](https://weather-app-weld-sigma.vercel.app/).
 
 To run the application in development mode, it's necessary to have a `.env.local` file with some keys:
 
